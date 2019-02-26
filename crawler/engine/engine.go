@@ -17,11 +17,10 @@ func Run(seeds ...Request) {
 		requests = requests[1:]
 
 		fmt.Println("fetcher url", r.Url)
-		bytes, err := fetcher.Fetcher(r.Url)
+		result, err := worker(&r)
 		if err != nil {
-			fmt.Printf("fetcher url :%s exception! error:%s \n", r.Url, err.Error())
+			continue
 		}
-		result := r.ParseFun(bytes)
 		requests = append(requests, result.Requests...)
 		for _, item := range result.Items {
 			if value, ok := item.(model.UserInfo); ok {
@@ -30,4 +29,14 @@ func Run(seeds ...Request) {
 			fmt.Printf("parse city result, the name is：%s", item)
 		}
 	}
+}
+
+func worker(r *Request) (ParseResult, error) {
+	bytes, err := fetcher.Fetcher(r.Url)
+	if err != nil {
+		fmt.Printf("fetcher url :%s exception! error:%s \n", r.Url, err.Error())
+		return ParseResult{}, err
+	}
+	return r.ParseFun(bytes), nil
+
 }
