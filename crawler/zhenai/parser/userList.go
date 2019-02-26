@@ -11,8 +11,15 @@ func ParseUserList(contents []byte) engine.ParseResult {
 	submatchs := compile.FindAllSubmatch(contents, -1)
 	result := engine.ParseResult{}
 	for _, submatch := range submatchs {
-		result.Items = append(result.Items, submatch[2])
-		result.Requests = append(result.Requests, engine.Request{Url: string(submatch[1]), ParseFun: ParseUserInfo})
+		item := submatch[2]
+		result.Items = append(result.Items, item)
+		result.Requests = append(result.Requests, engine.Request{
+			Url: string(submatch[1]),
+			ParseFun: func(contents []byte) engine.ParseResult {
+				// 利用函数式编程，将用户名称传入到用户信息解析器中
+				return ParseUserInfo(contents, string(item))
+			},
+		})
 	}
 	return result
 }

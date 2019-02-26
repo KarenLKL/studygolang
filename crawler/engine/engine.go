@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"github.com/KarenLKL/studygolang/crawler/fetcher"
+	"github.com/KarenLKL/studygolang/crawler/model"
 )
 
 func Run(seeds ...Request) {
@@ -22,9 +23,11 @@ func Run(seeds ...Request) {
 		}
 		result := r.ParseFun(bytes)
 		requests = append(requests, result.Requests...)
-
-		for _, cityName := range result.Items {
-			fmt.Printf("parse city result, the name is：%s", cityName)
+		for _, item := range result.Items {
+			if value, ok := item.(model.UserInfo); ok {
+				fmt.Printf("user info：%v \n", value)
+			}
+			fmt.Printf("parse city result, the name is：%s", item)
 		}
 	}
 }
