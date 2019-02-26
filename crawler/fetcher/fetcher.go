@@ -8,12 +8,17 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"time"
 )
 
+var rateLimiter = time.Tick(20 * time.Millisecond)
+
 func Fetcher(url string) ([]byte, error) {
+	// 限制访问速度
+	<-rateLimiter
 	client := http.Client{}
 	request, err := http.NewRequest("GET", url, nil)
-	if err!=nil {
+	if err != nil {
 		fmt.Printf("wrong http request: %s", err.Error())
 		return nil, fmt.Errorf("wrong http request: %s", err.Error())
 	}
