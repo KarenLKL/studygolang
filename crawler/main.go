@@ -6,5 +6,11 @@ import (
 )
 
 func main() {
-	engine.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
+	//engine.SimpleEngine{}.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
+	currentEngine := &engine.CurrentEngine{
+		Scheduler: &engine.SimpleScheduler{},
+		WorkCount: 100,
+	}
+	currentEngine.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
+
 }

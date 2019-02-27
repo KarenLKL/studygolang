@@ -10,6 +10,6 @@ type Request struct {
 	ParseFun func([]byte) ParseResult
 }
 
-func NilParseFun(contents []byte)ParseResult{
+func NilParseFun(contents []byte) ParseResult {
 	return ParseResult{}
 }
