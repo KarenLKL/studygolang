@@ -1,6 +1,8 @@
 package engine
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type CurrentEngine struct {
 	Scheduler Scheduler
@@ -10,16 +12,16 @@ type CurrentEngine struct {
 type Scheduler interface {
 	Submit(Request)
 	ConfigureMasterWorkerChan(chan Request)
+	WorkerReady(chan Request)
+	Run()
 }
 
 func (c *CurrentEngine) Run(seeds ...Request) {
-	in := make(chan Request)
 	out := make(chan ParseResult)
-
-	c.Scheduler.ConfigureMasterWorkerChan(in)
+	c.Scheduler.Run()
 
 	for i := 0; i < c.WorkCount; i++ {
-		createWorker(in, out)
+		createWorker(out, c.Scheduler)
 	}
 
 	for _, request := range seeds {
@@ -40,9 +42,11 @@ func (c *CurrentEngine) Run(seeds ...Request) {
 	}
 }
 
-func createWorker(in chan Request, out chan ParseResult) {
+func createWorker(out chan ParseResult, s Scheduler) {
+	in := make(chan Request)
 	go func() {
 		for {
+			s.WorkerReady(in)
 			request := <-in
 			result, err := worker(request)
 			if err != nil {
