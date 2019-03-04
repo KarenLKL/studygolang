@@ -1,40 +1,37 @@
 package engine
 
-import (
-	"fmt"
-)
-
-type CurrentEngine struct {
+type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkCount int
+	ItemSaver chan interface{}
 }
 
 type Scheduler interface {
+	ReadyNotify
 	Submit(Request)
-	ConfigureMasterWorkerChan(chan Request)
-	WorkerReady(chan Request)
+	WorkerChan() chan Request
 	Run()
 }
 
-func (c *CurrentEngine) Run(seeds ...Request) {
+type ReadyNotify interface {
+	WorkerReady(w chan Request)
+}
+
+func (c *ConcurrentEngine) Run(seeds ...Request) {
 	out := make(chan ParseResult)
 	c.Scheduler.Run()
-
 	for i := 0; i < c.WorkCount; i++ {
-		createWorker(out, c.Scheduler)
+		createWorker(c.Scheduler.WorkerChan(), out, c.Scheduler)
 	}
 
 	for _, request := range seeds {
 		c.Scheduler.Submit(request)
 	}
-	itemCount := 1
 	for {
 		result := <-out
 		for _, value := range result.Items {
-			fmt.Printf("%s , # %d \n", value, itemCount)
-			itemCount++
+			c.ItemSaver <- value
 		}
-		fmt.Println()
 
 		for _, value := range result.Requests {
 			c.Scheduler.Submit(value)
@@ -42,11 +39,10 @@ func (c *CurrentEngine) Run(seeds ...Request) {
 	}
 }
 
-func createWorker(out chan ParseResult, s Scheduler) {
-	in := make(chan Request)
+func createWorker(in chan Request, out chan ParseResult, r ReadyNotify) {
 	go func() {
 		for {
-			s.WorkerReady(in)
+			r.WorkerReady(in)
 			request := <-in
 			result, err := worker(request)
 			if err != nil {
