@@ -16,7 +16,7 @@ func PrintCityList(contents []byte) engine.ParseResult {
 		//	// 测试时候只取前5个
 		//	break
 		//}
-		result.Items = append(result.Items, item[3])
+		//result.Items = append(result.Items, item[3])
 		result.Requests = append(result.Requests, engine.Request{Url: string(item[2]), ParseFun: ParseUserList})
 	}
 	return result

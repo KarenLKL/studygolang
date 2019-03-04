@@ -5,14 +5,16 @@ import (
 	"regexp"
 )
 
+var compile = regexp.MustCompile(`<a href="(http://album.zhenai.com/u/[0-9a-z]+)"[^<]*>([^<]*)</a>`)
+
 func ParseUserList(contents []byte) engine.ParseResult {
 	//fmt.Printf("%s",contents)http://album.zhenai.com/u/1618277105
-	compile := regexp.MustCompile(`<a href="(http://album.zhenai.com/u/[0-9a-z]+)"[^<]*>([^<]*)</a>`)
+
 	submatchs := compile.FindAllSubmatch(contents, -1)
 	result := engine.ParseResult{}
 	for _, submatch := range submatchs {
 		item := submatch[2]
-		result.Items = append(result.Items, item)
+		//result.Items = append(result.Items, item)
 		result.Requests = append(result.Requests, engine.Request{
 			Url: string(submatch[1]),
 			ParseFun: func(contents []byte) engine.ParseResult {
