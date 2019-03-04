@@ -2,7 +2,7 @@ package engine
 
 import "fmt"
 
-type CurrentEngine struct {
+type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkCount int
 }
@@ -12,7 +12,7 @@ type Scheduler interface {
 	ConfigureMasterWorkerChan(chan Request)
 }
 
-func (c *CurrentEngine) Run(seeds ...Request) {
+func (c *ConcurrentEngine) Run(seeds ...Request) {
 	in := make(chan Request)
 	out := make(chan ParseResult)
 
@@ -29,7 +29,7 @@ func (c *CurrentEngine) Run(seeds ...Request) {
 	for {
 		result := <-out
 		for _, value := range result.Items {
-			fmt.Printf("%s , # %d \n", value, itemCount)
+			fmt.Printf("%s, # %d \n", value, itemCount)
 			itemCount++
 		}
 		fmt.Println()

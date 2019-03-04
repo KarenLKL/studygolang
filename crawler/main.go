@@ -7,7 +7,7 @@ import (
 
 func main() {
 	//engine.SimpleEngine{}.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
-	currentEngine := &engine.CurrentEngine{
+	currentEngine := &engine.ConcurrentEngine{
 		Scheduler: &engine.SimpleScheduler{},
 		WorkCount: 100,
 	}
