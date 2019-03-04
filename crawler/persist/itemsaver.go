@@ -1,6 +1,7 @@
 package persist
 
 import (
+	"github.com/KarenLKL/studygolang/crawler/zhenai/parser"
 	"log"
 )
 
@@ -11,7 +12,10 @@ func ItemSaver() chan interface{} {
 		count := 0
 		for {
 			item := <-itemSaverChan
-			log.Printf("save item:got count:#%d,value:%v", count, item)
+			userDetail := parser.ParseUserDetail(item)
+			if userDetail != nil {
+				log.Printf("save item:got count:#%d,value:%v", count, userDetail)
+			}
 			count++
 		}
 	}()
