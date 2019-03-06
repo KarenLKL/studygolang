@@ -6,12 +6,16 @@ import (
 	"github.com/KarenLKL/studygolang/crawler/engine"
 	"github.com/KarenLKL/studygolang/crawler/model"
 	"github.com/KarenLKL/studygolang/crawler/zhenai/parser"
-	"gopkg.in/olivere/elastic.v5"
 	"log"
 )
 
+type ItemSaver struct {
+	ElasticClient *elastic.Client
+	Index         string
+}
+
 // item入库处理
-func ItemSaver(index string) (chan engine.Item, error) {
+func (i ItemSaver) Saver() (chan engine.Item, error) {
 	itemSaverChan := make(chan engine.Item)
 	client, err := elastic.NewClient(elastic.SetSniff(false))
 	if err != nil {
@@ -26,7 +30,7 @@ func ItemSaver(index string) (chan engine.Item, error) {
 				log.Printf("save item:got count:#%d,value:%v", count, userDetail)
 			}
 			item.UserInfo = userDetail
-			err := save(client, item, index)
+			err := save(client, item, i.Index)
 			if err != nil {
 				log.Printf("error save item:%+v %s", userDetail, err.Error())
 			}
@@ -41,9 +45,9 @@ const (
 	dbType  = "zhenai"
 )
 
-func save(client *elastic.Client, row engine.Item, index string) error {
+func (i ItemSaver) save(row engine.Item) error {
 
-	indexService := client.Index().Index(index).BodyJson(row)
+	indexService := i.ElasticClient.Index().Index(i.Index).BodyJson(row)
 	if len(row.Type) > 0 {
 		indexService.Type(row.Type)
 	}
@@ -58,8 +62,8 @@ func save(client *elastic.Client, row engine.Item, index string) error {
 	return nil
 }
 
-func get(client *elastic.Client, index, id string) (model.UserDetail, error) {
-	result, err := client.Get().Index(index).Type(dbType).Id(id).Do(context.Background())
+func (i ItemSaver) get(id string) (model.UserDetail, error) {
+	result, err := i.ElasticClient.Get().Index(i.Index).Type(dbType).Id(id).Do(context.Background())
 	if err != nil {
 		return model.UserDetail{}, err
 	}
@@ -69,4 +73,14 @@ func get(client *elastic.Client, index, id string) (model.UserDetail, error) {
 		return model.UserDetail{}, err
 	}
 	return userDetail, nil
+}
+
+func (i ItemSaver) All(esType string) model.Response {
+	result, err := i.ElasticClient.Get().Index(i.Index).Type(dbType).Do(context.Background())
+	if err != nil {
+		return model.Response{}
+	}
+	var response model.Response
+	log.Print(result)
+	return response
 }
