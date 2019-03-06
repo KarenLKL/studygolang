@@ -3,7 +3,7 @@ package engine
 type ConcurrentEngine struct {
 	Scheduler Scheduler
 	WorkCount int
-	ItemSaver chan interface{}
+	ItemSaver chan Item
 }
 
 type Scheduler interface {
@@ -25,7 +25,9 @@ func (c *ConcurrentEngine) Run(seeds ...Request) {
 	}
 
 	for _, request := range seeds {
-		c.Scheduler.Submit(request)
+		if !isExit(request.Url) {
+			c.Scheduler.Submit(request)
+		}
 	}
 	for {
 		result := <-out
@@ -51,4 +53,14 @@ func createWorker(in chan Request, out chan ParseResult, r ReadyNotify) {
 			out <- result
 		}
 	}()
+}
+
+var visitedUrls = make(map[string]bool)
+
+func isExit(url string) bool {
+	if visitedUrls[url] {
+		return true
+	}
+	visitedUrls[url] = true
+	return false
 }

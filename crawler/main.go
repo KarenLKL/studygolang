@@ -9,10 +9,14 @@ import (
 
 func main() {
 	//engine.SimpleEngine{}.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
+	items, err := persist.ItemSaver("dating_profile")
+	if err != nil {
+		panic(err)
+	}
 	currentEngine := &engine.ConcurrentEngine{
 		Scheduler: &scheduler.QueuedScheduler{},
 		WorkCount: 100,
-		ItemSaver: persist.ItemSaver(),
+		ItemSaver: items,
 	}
 	currentEngine.Run(engine.Request{Url: "http://www.zhenai.com/zhenghun", ParseFun: parser.PrintCityList})
 

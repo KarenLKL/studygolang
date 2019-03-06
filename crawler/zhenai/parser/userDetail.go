@@ -6,42 +6,15 @@ import (
 	"strings"
 )
 
-type UserDetail struct {
-	UserName         string            `json:"user_name"`         // 昵称
-	MarriageStatus   string            `json:"marriage_status"`   // 婚姻状态
-	Age              string            `json:"age"`               // 年龄
-	Constellation    string            `json:"constellation"`     //星座
-	Height           string            `json:"height"`            //身高
-	Weight           string            `json:"weight"`            //体重
-	Workplace        string            `json:"workplace"`         //工作地
-	IncomeOfMonth    string            `json:"income_of_month"`   //月收入
-	Occupation       string            `json:"occupation"`        //职位
-	Education        string            `json:"education"`         //学历
-	PartnerCondition *PartnerCondition `json:"partner_condition"` // 择偶条件
-}
-
-type PartnerCondition struct {
-	Age            string `json:"age"`             // 年龄
-	Height         string `json:"height"`          //身高
-	Workplace      string `json:"workplace"`       //工作地
-	IncomeOfMonth  string `json:"income_of_month"` //月收入
-	MarriageStatus string `json:"marriage_status"` // 婚姻状态
-	Shape          string `json:"shape"`           // 体型
-	DrinkAble      string `json:"drink_able"`      //是否可以喝酒
-	SmokingAble    string `json:"smoking_able"`    //是否允许抽烟
-	Child          string `json:"child"`           //是否要孩子
-	HasChild       string `json:"has_child"`       //是否有小孩
-}
-
 var marriageStatusArray = []string{"离异", "未婚", "丧偶", ""}
 
-func ParseUserDetail(userInfo interface{}) *UserDetail {
+func ParseUserDetail(userInfo interface{}) *model.UserDetail {
 
 	if user, ok := userInfo.(model.UserInfo); ok {
 		if len(user.PersonalData) < 1 {
 			return nil
 		}
-		userDetail := &UserDetail{
+		userDetail := &model.UserDetail{
 			UserName:       user.Name,
 			MarriageStatus: getTargetValueIfContain(user.PersonalData, 0, "", marriageStatusArray),
 			Age:            getTargetValueIfContain(user.PersonalData, 1, "岁", nil),
@@ -53,7 +26,7 @@ func ParseUserDetail(userInfo interface{}) *UserDetail {
 			Occupation:     getTargetValueIfExit(user.PersonalData, 7, ""),
 			Education:      getTargetValueIfExit(user.PersonalData, 8, ""),
 		}
-		userDetail.PartnerCondition = &PartnerCondition{
+		userDetail.PartnerCondition = &model.PartnerCondition{
 			Age:            getTargetValueIfContain(user.PartnerCondition, 0, "岁", nil),
 			Height:         getTargetValueIfContain(user.PartnerCondition, 1, "cm", nil),
 			Workplace:      getTargetValueIfContain(user.PartnerCondition, 2, "工作地", nil),
