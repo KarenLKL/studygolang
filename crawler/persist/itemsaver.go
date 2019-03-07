@@ -4,9 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/KarenLKL/studygolang/crawler/engine"
+	"github.com/KarenLKL/studygolang/crawler/front/model"
 	"github.com/KarenLKL/studygolang/crawler/model"
 	"github.com/KarenLKL/studygolang/crawler/zhenai/parser"
+	"gopkg.in/olivere/elastic.v5"
 	"log"
+	"reflect"
+	"strconv"
 )
 
 type ItemSaver struct {
@@ -17,10 +21,6 @@ type ItemSaver struct {
 // item入库处理
 func (i ItemSaver) Saver() (chan engine.Item, error) {
 	itemSaverChan := make(chan engine.Item)
-	client, err := elastic.NewClient(elastic.SetSniff(false))
-	if err != nil {
-		return nil, err
-	}
 	go func() {
 		count := 0
 		for {
@@ -30,7 +30,7 @@ func (i ItemSaver) Saver() (chan engine.Item, error) {
 				log.Printf("save item:got count:#%d,value:%v", count, userDetail)
 			}
 			item.UserInfo = userDetail
-			err := save(client, item, i.Index)
+			err := i.save(item)
 			if err != nil {
 				log.Printf("error save item:%+v %s", userDetail, err.Error())
 			}
@@ -75,12 +75,30 @@ func (i ItemSaver) get(id string) (model.UserDetail, error) {
 	return userDetail, nil
 }
 
-func (i ItemSaver) All(esType string) model.Response {
-	result, err := i.ElasticClient.Get().Index(i.Index).Type(dbType).Do(context.Background())
-	if err != nil {
-		return model.Response{}
+func (i ItemSaver) All(esType string, q string, from int) (page.SearchResult, error) {
+	search := i.ElasticClient.Search(i.Index)
+	if len(q) > 0 {
+		search = search.Query(elastic.NewQueryStringQuery(q))
 	}
-	var response model.Response
-	log.Print(result)
-	return response
+	searchResult, err := search.From(from).Do(context.Background())
+	if err != nil {
+		return page.SearchResult{}, err
+	}
+	var sr page.SearchResult
+
+	if len(q) > 0 {
+		sr.Q = "q=" + q
+		if from != 0 {
+			sr.Q += "&from=" + strconv.Itoa(from)
+		}
+	} else {
+		if from != 0 {
+			sr.Q = "from=" + strconv.Itoa(from)
+		}
+	}
+
+	sr.Hits = searchResult.Hits.TotalHits
+	sr.Start = from
+	sr.Items = searchResult.Each(reflect.TypeOf(engine.Item{}))
+	return sr, nil
 }

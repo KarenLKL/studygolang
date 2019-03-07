@@ -38,6 +38,7 @@ func ParseUserDetail(userInfo interface{}) *model.UserDetail {
 			HasChild:       getTargetValueIfContain(user.PersonalData, 8, "小孩", nil),
 			Child:          getTargetValueIfContain(user.PersonalData, 9, "是否想要孩子", nil),
 		}
+		//log.Printf("ParseUserDetail: %v+%", userDetail)
 		return userDetail
 	} else {
 		log.Println("interface convert to UserInfo exception!")
@@ -97,7 +98,7 @@ func getEqualedValue(target string, arras []string) string {
 
 func getContainValue(containVal string, arrays []string) string {
 	for _, value := range arrays {
-		if strings.Contains(containVal, value) {
+		if strings.Contains(value, containVal) {
 			return value
 		}
 	}
